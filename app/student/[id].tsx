@@ -4,6 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import type { Student } from '@/types/api';
 import { ApiError, getStudent } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
+import { Ionicons } from '@expo/vector-icons';
+import { PortalTheme as theme } from '@/constants/portal-theme';
 
 export default function StudentDetailsScreen() {
   const { id } = useLocalSearchParams<{ id?: string }>();
@@ -30,7 +32,8 @@ export default function StudentDetailsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Student Details</Text>
+      <Text style={styles.eyebrow}>CAMPUS CONNECT  /  DIRECTORY</Text>
+      <Text style={styles.title}>Student details</Text>
       {loading ? <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading student…</Text></View>
         : error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>
         : !student ? <Text style={styles.text}>No student record available.</Text> : null}
@@ -44,18 +47,19 @@ export default function StudentDetailsScreen() {
         <Text style={styles.text}>Address: {student?.address || '—'}</Text>
         <Text style={styles.text}>Contact: {student?.contact || '—'}</Text>
       </View>
-      <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.back()}><Text style={styles.buttonText}>Back</Text></Pressable>
+      <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.back()}><Ionicons name="arrow-back" size={17} color={theme.colors.primary} /><Text style={styles.buttonText}>Back to directory</Text></Pressable>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, padding: 24, gap: 20, backgroundColor: '#f2f5fa' },
-  title: { color: '#17324d', fontSize: 28, fontWeight: '700' },
-  state: { gap: 12, alignItems: 'center' },
-  card: { backgroundColor: '#ffffff', padding: 20, gap: 16, borderRadius: 12 },
-  text: { color: '#536579', fontSize: 16 },
-  error: { color: '#b42318' },
-  button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8, alignItems: 'center' },
-  buttonText: { color: '#ffffff', fontWeight: '600' },
+  container: { flexGrow: 1, paddingHorizontal: 22, paddingTop: 24, paddingBottom: 32, gap: 14, backgroundColor: theme.colors.background },
+  eyebrow: { color: theme.colors.primary, fontSize: 9, fontWeight: '800', letterSpacing: 1.3 },
+  title: { color: theme.colors.navy, fontSize: 27, fontWeight: '800', letterSpacing: -0.6, marginTop: -8 },
+  state: { alignSelf: 'stretch', backgroundColor: theme.colors.surface, padding: 17, borderRadius: 15, gap: 10, alignItems: 'center', borderWidth: 1, borderColor: theme.colors.border },
+  card: { backgroundColor: theme.colors.surface, borderWidth: 1, borderColor: theme.colors.border, padding: 20, gap: 14, borderRadius: 19 },
+  text: { color: theme.colors.ink, fontSize: 14, lineHeight: 21, paddingBottom: 9, borderBottomWidth: 1, borderBottomColor: '#EEF2F4' },
+  error: { color: theme.colors.danger },
+  button: { alignSelf: 'flex-start', flexDirection: 'row', gap: 8, backgroundColor: theme.colors.mint, paddingHorizontal: 14, paddingVertical: 12, borderRadius: 12, alignItems: 'center' },
+  buttonText: { color: theme.colors.primaryDark, fontWeight: '800', fontSize: 12 },
 });
