@@ -61,7 +61,7 @@ export async function signInRequest(credentials: LoginRequest): Promise<LoginRes
   } catch (error) {
     if (error instanceof ApiError && error.status === 404) {
       throw new Error(
-        'Invalid email or password, or no saved Postman login example matches this request. Check the credentials and the POST /login example body.',
+        'The mock server has no saved response example matching POST /login with this request body. Check the POST /login example in Postman and make sure its body fields and values match.',
       );
     }
     throw error;
