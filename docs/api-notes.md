@@ -1,8 +1,11 @@
 # API notes
 
-Base URL: `https://25e46116-162c-4759-93ee-7cae1985b1f8.mock.pstmn.io`
+Base URL: `https://10f17bcd-c915-4aac-a68b-a2ebd1848224.mock.pstmn.io`
 
-Responses below were observed with curl on 2026-10-04.
+The response observations below were made against the earlier mock server
+`https://25e46116-162c-4759-93ee-7cae1985b1f8.mock.pstmn.io` on 2026-10-04.
+They have not been verified against the active mock URL above; use the Postman
+examples for that server as the source of truth for its request and response bodies.
 
 | Method and endpoint | HTTP status | Observed response fields |
 | --- | --- | --- |
@@ -19,7 +22,7 @@ the app displays a login-specific message telling the user to check credentials
 and the saved `POST /login` example body. This mock response is not a server-side
 credential validation result.
 
-## Implementation assumptions
+## Previous server observations and implementation assumptions
 
 - The login request body is `{ "email": string, "password": string }`.
 - On successful login, the token is expected as `access_token` or `token`, with an optional `user` or `profile` object. These success fields could not be verified because the mock rejected the request.

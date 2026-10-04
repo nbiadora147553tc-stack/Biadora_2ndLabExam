@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'https://25e46116-162c-4759-93ee-7cae1985b1f8.mock.pstmn.io';
+export const API_BASE_URL = 'https://10f17bcd-c915-4aac-a68b-a2ebd1848224.mock.pstmn.io';
 
 // Expected endpoints:
 // POST /login
