@@ -31,4 +31,6 @@ const styles = StyleSheet.create({
   heading: { color: '#17324d', fontSize: 18, fontWeight: '600' },
   button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8 },
   buttonText: { color: '#ffffff', fontWeight: '600' },
+  link: { color: '#245bb2', paddingVertical: 10 },
+  note: { color: '#536579', fontSize: 12 },
 });

@@ -4,32 +4,32 @@
 
 ### Student Information
 
-Name:Jhon Dave Ledesma
+Name: Nazvil Biadora
 
-Section: CCE 106 2026
+Section: CCE 106 2063
 
-Date: Oct 3 2026
+Date: Oct 5 2026
 
 ### Required Features
 
-- [x] Login
-- [x] Authentication state
-- [x] Secure token storage
-- [x] Protected navigation
-- [x] Dashboard
-- [x] Student API request
-- [x] Loading state
-- [x] Error state
-- [x] Empty state
-- [x] Search/filter
-- [x] Dynamic student details
-- [x] Profile
-- [x] Session restoration
-- [x] Logout
+- [ ] Login
+- [ ] Authentication state
+- [ ] Secure token storage
+- [ ] Protected navigation
+- [ ] Dashboard
+- [ ] Student API request
+- [ ] Loading state
+- [ ] Error state
+- [ ] Empty state
+- [ ] Search/filter
+- [ ] Dynamic student details
+- [ ] Profile
+- [ ] Session restoration
+- [ ] Logout
 
 ### API
 
-Base URL: `https://25e46116-162c-4759-93ee-7cae1985b1f8.mock.pstmn.io` (set in `constants/api.ts`)
+The Postman mock URL documented in `docs/api-notes.md` is configured in `constants/api.ts`.
 
 POST /login
 
@@ -50,15 +50,14 @@ npx expo start
 
 Press `w` for web, or run `npm run web` directly.
 
-Sign in with the credentials supplied by the instructor. Login requests ask the
-Postman mock to match the saved request body, so its `POST /login` example must
-contain the valid email/password body and `Content-Type: application/json`.
-Student list, details, and profile records load from the API rather than from
-local sample data.
+The sign-in screen requires the credentials and matching login example configured
+in the provided Postman mock. A successful login response must contain `access_token`
+or `token`. The app rejects responses without a token and never stores the password.
+Native sessions use Expo SecureStore. Web sessions remain in memory because SecureStore
+is unavailable there.
 
-Expo SecureStore is used only in `context/AuthContext.tsx`; web sessions remain
-in memory and do not survive reloads. Verify secure session restoration on
-Android/iOS. See the [Expo SDK 54 SecureStore documentation](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/).
+Student records and profiles are loaded from the documented API endpoints. No sample
+student data or credentials are included in the app.
 
 Compiler and lint checks:
 

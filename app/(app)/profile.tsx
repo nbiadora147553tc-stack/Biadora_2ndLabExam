@@ -1,58 +1,42 @@
-import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
+import type { Profile } from '@/types/api';
 import { ApiError, getProfile } from '@/lib/api';
-import type { Profile as ProfileData } from '@/types/api';
 
 export default function ProfileScreen() {
-  const { user, token, signOut } = useAuth();
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const { user, token, logout } = useAuth();
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  const loadProfile = useCallback(async () => {
-    if (!token) return;
-    setLoading(true);
-    setError('');
-    try {
-      setProfile(await getProfile(token));
-    } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        await signOut();
-      } else {
-        setError(requestError instanceof Error ? requestError.message : 'Unable to load your profile.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [token, signOut]);
-
   useEffect(() => {
+    if (!token) return;
+    let active = true;
+    const loadProfile = async () => {
+      setLoading(true); setError('');
+      try { const result = await getProfile(token); if (active) setProfile(result); }
+      catch (cause) {
+        if (cause instanceof ApiError && cause.status === 401) { await logout(); return; }
+        if (active) setError(cause instanceof Error ? cause.message : 'Could not load your profile.');
+      } finally { if (active) setLoading(false); }
+    };
     void loadProfile();
-  }, [loadProfile]);
-
-  const shownProfile = profile ?? user;
-
+    return () => { active = false; };
+  }, [token, logout]);
+  const displayed = profile ?? user;
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>MY PROFILE</Text>
-      {loading ? (
-        <View style={styles.card}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading profile…</Text></View>
-      ) : error ? (
-        <View style={styles.card} accessibilityLiveRegion="polite">
-          <Text style={styles.error}>{error}</Text>
-          <Pressable accessibilityRole="button" onPress={() => void loadProfile()}><Text style={styles.link}>Retry</Text></Pressable>
-        </View>
-      ) : (
-        <View style={styles.card}>
-          <Text style={styles.text}>Name: {shownProfile?.name || '—'}</Text>
-          <Text style={styles.text}>Email: {shownProfile?.email || '—'}</Text>
-          <Text style={styles.text}>Section: {shownProfile?.section || '—'}</Text>
-          {shownProfile?.role ? <Text style={styles.text}>Role: {shownProfile.role}</Text> : null}
-        </View>
-      )}
+      <View style={styles.card}>
+        {loading ? <ActivityIndicator color="#245bb2" /> : null}
+        {error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text> : null}
+        <Text style={styles.text}>Name: {displayed?.name || '—'}</Text>
+        <Text style={styles.text}>Email: {displayed?.email || '—'}</Text>
+        <Text style={styles.text}>Section: {displayed?.section || '—'}</Text>
+        <Text style={styles.text}>Role: {displayed?.role || '—'}</Text>
+      </View>
       <Text style={styles.text}>Session Status: {token ? 'Authenticated' : 'Not Available'}</Text>
-      <Pressable accessibilityRole="button" style={styles.button} onPress={() => void signOut()}><Text style={styles.buttonText}>LOGOUT</Text></Pressable>
+      <Pressable accessibilityRole="button" style={styles.button} onPress={logout}><Text style={styles.buttonText}>LOGOUT</Text></Pressable>
     </ScrollView>
   );
 }
@@ -62,8 +46,8 @@ const styles = StyleSheet.create({
   title: { color: '#17324d', fontSize: 24, fontWeight: '700' },
   card: { backgroundColor: '#ffffff', padding: 20, gap: 16, borderRadius: 12 },
   text: { color: '#536579', fontSize: 16 },
+  note: { color: '#536579', fontSize: 12 },
   error: { color: '#b42318' },
-  link: { color: '#245bb2', paddingVertical: 8 },
   button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontWeight: '600' },
 });

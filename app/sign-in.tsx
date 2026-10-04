@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
-import { useRouter } from 'expo-router';
-import { useAuth } from '@/hooks/useAuth';
+import { router } from 'expo-router';
 import { extractLoginToken, signInRequest } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function SignInScreen() {
-  const router = useRouter();
-  const { signIn } = useAuth();
+  const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,29 +13,19 @@ export default function SignInScreen() {
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
-      setError('Enter a valid email address.');
-      return;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !password) {
+      setError('Enter a valid email address and password.'); return;
     }
-    if (!password) {
-      setError('Enter your password.');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
       const response = await signInRequest({ email: normalizedEmail, password });
       const accessToken = extractLoginToken(response);
       if (!accessToken) throw new Error('The login response did not include an access token.');
-      await signIn(accessToken, response.user ?? response.profile ?? null);
-      setPassword('');
-      router.replace('/(app)');
-    } catch (loginError) {
-      setError(loginError instanceof Error ? loginError.message : 'Unable to sign in. Try again.');
-    } finally {
-      setLoading(false);
-    }
+      await login(accessToken, response.user ?? response.profile ?? {});
+      setPassword(''); router.replace('/(app)');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Sign in failed. Please try again.');
+    } finally { setLoading(false); }
   };
 
   return (
@@ -56,7 +45,7 @@ export default function SignInScreen() {
         <Pressable accessibilityRole="button" style={styles.button} onPress={handleLogin} disabled={loading}>
           <Text style={styles.buttonText}>{loading ? 'Signing in…' : 'Login'}</Text>
         </Pressable>
-        <Text style={styles.note}>Use your student account credentials to continue.</Text>
+        <Text style={styles.note}>Sign in with the credentials provided for the student service.</Text>
       </View>
     </ScrollView>
   );

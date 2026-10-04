@@ -1,12 +1,10 @@
-import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import type { Student } from '@/types/api';
 
 export default function StudentCard({ student }: { student: Student }) {
-  const router = useRouter();
-
   const handleViewDetails = () => {
-    if (student.id === undefined || student.id === null || String(student.id).length === 0) return;
+    if (student.id === undefined || student.id === null || String(student.id).trim() === '') return;
     router.push({ pathname: '/student/[id]', params: { id: String(student.id) } });
   };
 
@@ -15,7 +13,7 @@ export default function StudentCard({ student }: { student: Student }) {
       <Text style={styles.name}>{student.name || 'Name not available'}</Text>
       <Text style={styles.text}>{student.email || 'Email not available'}</Text>
       {student.course ? <Text style={styles.text}>{student.course}</Text> : null}
-      <Pressable accessibilityRole="button" style={styles.button} onPress={handleViewDetails} disabled={student.id === undefined || student.id === null}>
+      <Pressable accessibilityRole="button" style={styles.button} onPress={handleViewDetails}>
         <Text style={styles.buttonText}>View Details</Text>
       </Pressable>
     </View>

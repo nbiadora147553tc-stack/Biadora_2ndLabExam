@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 import StudentCard from '@/components/StudentCard';
-import { useAuth } from '@/hooks/useAuth';
-import { ApiError, getStudents } from '@/lib/api';
 import type { Student } from '@/types/api';
+import { ApiError, getStudents } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function StudentsScreen() {
-  const { token, signOut } = useAuth();
+  const { token, logout } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -14,57 +14,39 @@ export default function StudentsScreen() {
 
   const loadStudents = useCallback(async () => {
     if (!token) return;
-    setLoading(true);
-    setError('');
+    setLoading(true); setError('');
     try {
-      setStudents(await getStudents(token));
-    } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        await signOut();
-      } else {
-        setError(requestError instanceof Error ? requestError.message : 'Unable to load students.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [token, signOut]);
+      const records = await getStudents(token);
+      if (!Array.isArray(records)) throw new Error('The service returned an invalid student list.');
+      setStudents(records);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) { await logout(); return; }
+      setError(cause instanceof Error ? cause.message : 'Could not load students.');
+    } finally { setLoading(false); }
+  }, [token, logout]);
 
   useEffect(() => {
     void loadStudents();
   }, [loadStudents]);
 
-  const normalizedSearch = search.trim().toLocaleLowerCase();
-  const filteredStudents = students.filter((student) =>
-    [student.name, student.id, student.course]
-      .some((value) => String(value ?? '').toLocaleLowerCase().includes(normalizedSearch)),
-  );
+  const query = search.trim().toLocaleLowerCase();
+  const filteredStudents = students.filter((student) => [student.name, student.email, student.course, student.section]
+    .some((value) => typeof value === 'string' && value.toLocaleLowerCase().includes(query)));
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Students</Text>
-      <TextInput
-        style={styles.input}
-        accessibilityLabel="Search students"
-        placeholder="Search by name, ID, or course"
-        value={search}
-        onChangeText={setSearch}
-        autoCapitalize="none"
-        autoCorrect={false}
-      />
+      <TextInput style={styles.input} accessibilityLabel="Search students" placeholder="Search by name" value={search} onChangeText={setSearch} />
       {loading ? (
         <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading students…</Text></View>
       ) : error ? (
-        <View style={styles.state} accessibilityLiveRegion="polite">
-          <Text style={styles.error}>{error}</Text>
-          <Pressable accessibilityRole="button" onPress={() => void loadStudents()}><Text style={styles.link}>Retry</Text></Pressable>
-        </View>
+        <View style={styles.state} accessibilityLiveRegion="polite"><Text style={styles.error}>{error}</Text><Pressable accessibilityRole="button" onPress={loadStudents}><Text style={styles.link}>Try Again</Text></Pressable></View>
       ) : (
         <FlatList
           data={filteredStudents}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item, index) => String(item.id ?? index)}
           renderItem={({ item }) => <StudentCard student={item} />}
-          keyboardShouldPersistTaps="handled"
-          ListEmptyComponent={<View style={styles.state}><Text style={styles.text}>{students.length === 0 ? 'No students found.' : 'No students match your search.'}</Text></View>}
+          ListEmptyComponent={<View style={styles.state}><Text style={styles.text}>{students.length ? 'No students match your search.' : 'No student records are available.'}</Text></View>}
         />
       )}
     </View>
@@ -77,6 +59,7 @@ const styles = StyleSheet.create({
   input: { padding: 14, borderWidth: 1, borderColor: '#c6d2e1', borderRadius: 8, backgroundColor: '#ffffff', color: '#17324d', marginBottom: 20 },
   state: { padding: 24, gap: 12, alignItems: 'center' },
   text: { color: '#536579' },
-  error: { color: '#b42318', textAlign: 'center' },
+  note: { color: '#536579', fontSize: 12 },
+  error: { color: '#b42318' },
   link: { color: '#245bb2', padding: 12 },
 });

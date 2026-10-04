@@ -1,45 +1,28 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '@/hooks/useAuth';
-import { ApiError, getStudent } from '@/lib/api';
 import type { Student } from '@/types/api';
+import { ApiError, getStudent } from '@/lib/api';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function StudentDetailsScreen() {
-  const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const id = Array.isArray(params.id) ? params.id[0] : params.id;
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const router = useRouter();
-  const { token, signOut } = useAuth();
+  const { token, logout } = useAuth();
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [notFound, setNotFound] = useState(false);
 
   const loadStudent = useCallback(async () => {
-    setStudent(null);
-    setNotFound(false);
-    setError('');
-    if (!id || !id.trim() || !token) {
-      setLoading(false);
-      if (!id || !id.trim()) setError('The student ID is invalid.');
-      return;
-    }
-
-    setLoading(true);
+    if (!id || !token) { setError('A valid student ID is required.'); setLoading(false); return; }
+    setLoading(true); setError(''); setStudent(null);
     try {
       setStudent(await getStudent(token, id));
-    } catch (requestError) {
-      if (requestError instanceof ApiError && requestError.status === 401) {
-        await signOut();
-      } else if (requestError instanceof ApiError && requestError.status === 404) {
-        setNotFound(true);
-      } else {
-        setError(requestError instanceof Error ? requestError.message : 'Unable to load this student.');
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [id, token, signOut]);
+    } catch (cause) {
+      if (cause instanceof ApiError && cause.status === 401) { await logout(); return; }
+      setError(cause instanceof ApiError && cause.status === 404 ? 'Student record not found.' : cause instanceof Error ? cause.message : 'Could not load this student.');
+    } finally { setLoading(false); }
+  }, [id, token, logout]);
 
   useEffect(() => {
     void loadStudent();
@@ -48,27 +31,19 @@ export default function StudentDetailsScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Student Details</Text>
-      {loading ? (
-        <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading student…</Text></View>
-      ) : notFound ? (
-        <Text style={styles.text}>Student not found.</Text>
-      ) : error ? (
-        <View style={styles.state} accessibilityLiveRegion="polite">
-          <Text style={styles.error}>{error}</Text>
-          {token ? <Pressable accessibilityRole="button" onPress={() => void loadStudent()}><Text style={styles.link}>Retry</Text></Pressable> : null}
-        </View>
-      ) : student ? (
-        <View style={styles.card}>
-          <Text style={styles.text}>ID: {student.id}</Text>
-          <Text style={styles.text}>Name: {student.name || '—'}</Text>
-          <Text style={styles.text}>Email: {student.email || '—'}</Text>
-          <Text style={styles.text}>Course: {student.course || '—'}</Text>
-          <Text style={styles.text}>Year: {student.year ?? '—'}</Text>
-          <Text style={styles.text}>Section: {student.section || '—'}</Text>
-          <Text style={styles.text}>Address: {student.address || '—'}</Text>
-          <Text style={styles.text}>Contact: {student.contact || '—'}</Text>
-        </View>
-      ) : null}
+      {loading ? <View style={styles.state}><ActivityIndicator color="#245bb2" /><Text style={styles.text}>Loading student…</Text></View>
+        : error ? <Text style={styles.error} accessibilityLiveRegion="polite">{error}</Text>
+        : !student ? <Text style={styles.text}>No student record available.</Text> : null}
+      <View style={styles.card}>
+        <Text style={styles.text}>ID: {id || 'Not available'}</Text>
+        <Text style={styles.text}>Name: {student?.name || '—'}</Text>
+        <Text style={styles.text}>Email: {student?.email || '—'}</Text>
+        <Text style={styles.text}>Course: {student?.course || '—'}</Text>
+        <Text style={styles.text}>Year: {student?.year ?? '—'}</Text>
+        <Text style={styles.text}>Section: {student?.section || '—'}</Text>
+        <Text style={styles.text}>Address: {student?.address || '—'}</Text>
+        <Text style={styles.text}>Contact: {student?.contact || '—'}</Text>
+      </View>
       <Pressable accessibilityRole="button" style={styles.button} onPress={() => router.back()}><Text style={styles.buttonText}>Back</Text></Pressable>
     </ScrollView>
   );
@@ -80,8 +55,7 @@ const styles = StyleSheet.create({
   state: { gap: 12, alignItems: 'center' },
   card: { backgroundColor: '#ffffff', padding: 20, gap: 16, borderRadius: 12 },
   text: { color: '#536579', fontSize: 16 },
-  error: { color: '#b42318', textAlign: 'center' },
-  link: { color: '#245bb2', padding: 12 },
+  error: { color: '#b42318' },
   button: { backgroundColor: '#245bb2', padding: 16, borderRadius: 8, alignItems: 'center' },
   buttonText: { color: '#ffffff', fontWeight: '600' },
 });
