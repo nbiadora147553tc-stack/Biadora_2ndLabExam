@@ -7,6 +7,9 @@ The response observations below were made against the earlier mock server
 They have not been verified against the active mock URL above; use the Postman
 examples for that server as the source of truth for its request and response bodies.
 
+The login body provided for the active mock is `{ "username": string, "password": string }`.
+The app sends these fields, but the mock's saved example must match the body to return a response.
+
 | Method and endpoint | HTTP status | Observed response fields |
 | --- | --- | --- |
 | `POST /login` | `400 Bad Request` | `error.name`, `error.message` (`badRequest`; `Request body has invalid format.`) |

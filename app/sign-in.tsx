@@ -8,19 +8,19 @@ import { PortalTheme as theme } from '@/constants/portal-theme';
 
 export default function SignInScreen() {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const handleLogin = async () => {
-    const normalizedEmail = email.trim();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail) || !password) {
-      setError('Enter a valid email address and password.'); return;
+    const normalizedUsername = username.trim();
+    if (!normalizedUsername || !password) {
+      setError('Enter your username and password.'); return;
     }
     setLoading(true); setError('');
     try {
-      const response = await signInRequest({ email: normalizedEmail, password });
+      const response = await signInRequest({ username: normalizedUsername, password });
       const accessToken = extractLoginToken(response);
       if (!accessToken) throw new Error('The login response did not include an access token.');
       await login(accessToken, response.user ?? response.profile ?? {});
@@ -40,8 +40,8 @@ export default function SignInScreen() {
         <Text style={styles.eyebrow}>CCE106 • PRACTICAL EXAMINATION</Text>
         <Text style={styles.title}>Welcome back</Text>
         <Text style={styles.subtitle}>Sign in to access your student services and records.</Text>
-        <Text style={styles.label}>Email</Text>
-        <TextInput style={styles.input} accessibilityLabel="Email" placeholder="student@example.com" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
+        <Text style={styles.label}>Username</Text>
+        <TextInput style={styles.input} accessibilityLabel="Username" placeholder="Enter your username" value={username} onChangeText={setUsername} keyboardType="email-address" autoCapitalize="none" autoCorrect={false} />
         <Text style={styles.label}>Password</Text>
         <TextInput style={styles.input} accessibilityLabel="Password" placeholder="Enter your password" value={password} onChangeText={setPassword} secureTextEntry />
         <View style={styles.feedback} accessibilityLiveRegion="polite">
